@@ -18,23 +18,32 @@ $wgExtensionCredits['other'][] = array(
 	'name'			=> 'RemoveRedlinks',
 	'url'			=> 'http://mediawiki.org/wiki/Extension:RemoveRedlinks',
 	'description'	=> 'Removes all redlinks from page output',
-	'author'		=> '[mailto:innocentkiller@gmail.com Chad Horohoe]',
+	'author'		=> array( '[mailto:innocentkiller@gmail.com Chad Horohoe]', '[mailto:dror.snir@kolzchut.org.il Dror Snir] ([http://www.kolzchut.org.il Kol-Zchut])]' ),
 );
 
 // Restrict link removal to anons only
-$wgRRAnonOnly = false;
+$wgRemoveRedLinksAnonOnly = false;
+$wgRemoveRedLinksExemptGroups = array();
 
 // Hook Registering
 $wgHooks['LinkBegin'][] = 'efRemoveRedlinks';
 
 // And the function
 function efRemoveRedlinks( $skin, $target, &$text, &$customAttribs, &$query, &$options, &$ret ) {
-	global $wgRRAnonOnly, $wgUser;
+	global $wgRemoveRedLinksAnonOnly, $wgRemoveRedLinksExemptGroups, $wgUser;
 	
 	// return possibly if we're not an anon
-	if( $wgRRAnonOnly && $wgUser->isLoggedIn() ) {
+	if( $wgRemoveRedLinksAnonOnly && $wgUser->isLoggedIn() ) {
 		return true;
 	}
+	
+	// return possibly if our group is exempt from this
+	$userGroups = $wgUser->getEffectiveGroups(true);
+	$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
+	if( !empty( $match ) ) {
+		return true;
+	}
+	
 	// return immediately if we know it's real
 	if ( in_array( 'known', $options ) ) {
 		return true; 
