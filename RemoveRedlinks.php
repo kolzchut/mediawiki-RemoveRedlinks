@@ -18,7 +18,7 @@ $wgExtensionCredits['other'][] = array(
 	'name'			=> 'RemoveRedlinks',
 	'url'			=> 'http://mediawiki.org/wiki/Extension:RemoveRedlinks',
 	'description'	=> 'Removes all redlinks from page output',
-	'author'		=> array( '[mailto:innocentkiller@gmail.com Chad Horohoe]', '[mailto:dror.snir@kolzchut.org.il Dror Snir] ([http://www.kolzchut.org.il Kol-Zchut])]' ),
+	'author'		=> array( '[mailto:innocentkiller@gmail.com Chad Horohoe]', '[mailto:dror.snir@kolzchut.org.il Dror Snir] ([http://www.kolzchut.org.il Kol-Zchut])' ),
 );
 
 // Restrict link removal to anons only
