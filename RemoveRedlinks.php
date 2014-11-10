@@ -16,49 +16,55 @@
 $wgExtensionCredits['other'][] = array(
 	'path'			=> __FILE__,
 	'name'			=> 'RemoveRedlinks',
-	'url'			=> 'http://mediawiki.org/wiki/Extension:RemoveRedlinks',
-	'description'	=> 'Removes all redlinks from page output',
-	'author'		=> array( '[mailto:innocentkiller@gmail.com Chad Horohoe]', '[mailto:dror.snir@kolzchut.org.il Dror Snir] ([http://www.kolzchut.org.il Kol-Zchut])' ),
+	'description'	=> 'Removes all redlinks from page output for certain groups',
+	'url'			=> 'https://mediawiki.org/wiki/Extension:RemoveRedlinks',
+	'version'		=> '2.0',
+	'author'		=> array( '[mailto:innocentkiller@gmail.com Chad Horohoe]', 'Dror S. ([http://www.kolzchut.org.il Kol-Zchut])' ),
+	'license-name'	=> 'GPL-2.0+'
 );
 
-// Restrict link removal to anons only
-$wgRemoveRedLinksAnonOnly = false;
+// Groups that should still see red links
 $wgRemoveRedLinksExemptGroups = array();
 
 // Hook Registering
-$wgHooks['LinkBegin'][] = 'efRemoveRedlinks';
+$wgHooks['LinkEnd'][] = 'RemoveRedLinks::onLinkEnd'; // Cancel red links for some users
+$wgHooks['PageRenderingHash'][] = 'RemoveRedLinks::onPageRenderingHash';
 
-// And the function
-function efRemoveRedlinks( $skin, $target, &$text, &$customAttribs, &$query, &$options, &$ret ) {
-	global $wgRemoveRedLinksAnonOnly, $wgRemoveRedLinksExemptGroups, $wgUser;
-	
-	// return possibly if we're not an anon
-	if( $wgRemoveRedLinksAnonOnly && $wgUser->isLoggedIn() ) {
+class RemoveRedLinks {
+
+	function onPageRenderingHash( &$confstr, $user, $optionsUsed ) {
+		global $wgRemoveRedLinksExemptGroups;
+
+		if( empty( $wgRemoveRedLinksExemptGroups ) ) {
+			return true;
+		}
+
+		$userGroups = $user->getEffectiveGroups(true);
+		$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
+		if( !empty( $match ) ) {
+			$confstr .= "!showRedLinks";
+		}
+
 		return true;
 	}
-	
-	// return possibly if our group is exempt from this
-	$userGroups = $wgUser->getEffectiveGroups(true);
-	$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
-	if( !empty( $match ) ) {
-		return true;
+
+	function onLinkEnd( $dummy, Title $target, array $options, &$text, array &$attribs, &$ret ) {
+		global $wgRemoveRedLinksExemptGroups, $wgUser;
+
+		// return possibly if our group is exempt from this
+		$userGroups = $wgUser->getEffectiveGroups(true);
+		$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
+		if( !empty( $match ) ) {
+			return true;
+		}
+
+		if ( in_array( 'broken', $options ) ) {
+			$ret = $text;
+			return false;
+		} else {
+			// we know it's good
+			return true;
+		}
 	}
-	
-	// return immediately if we know it's real
-	if ( in_array( 'known', $options ) ) {
-		return true; 
-	}
-	// or if we know it's broken
-	if ( in_array( 'broken', $options ) ) {
-		$ret = $text;
-		return false;
-	}
-	// hopefully we don't have to do this, but here we'll check for existence.
-	// dupes a bit of the logic in Linker::link(), but we have to know here
-	if( $target->isKnown() ) {
-		return true;
-	} else {
-		$ret = $text;
-		return false;
-	}
+
 }
