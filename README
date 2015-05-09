@@ -1,0 +1,11 @@
+RemoveRedlinks extension for MediaWiki
+=======================================
+
+This extension hides all redlinks and turns them into their static text.
+
+## Configuration
+
+    $wgRemoveRedLinksExemptGroups = array( 'a group we show red links', '2nd group');
+
+## License
+GNU-GPL2+. See COPYING file.
