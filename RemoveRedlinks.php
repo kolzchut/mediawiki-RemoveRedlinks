@@ -10,7 +10,7 @@
  * (at your option) any later version.
  *
  * @author Chad Horohoe <innocentkiller@gmail.com>
- * @author Dror S. [FFS]
+ * @author Dror S [FFS]
  * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
  */
  
