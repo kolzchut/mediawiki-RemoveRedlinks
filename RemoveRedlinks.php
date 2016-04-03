@@ -42,7 +42,7 @@ $wgHooks['PageRenderingHash'][] = 'RemoveRedLinks::onPageRenderingHash';
 
 class RemoveRedLinks {
 
-	function onPageRenderingHash( &$confstr, User $user, $optionsUsed ) {
+	public static function onPageRenderingHash( &$confstr, User $user, $optionsUsed ) {
 		global $wgRemoveRedLinksExemptGroups;
 
 		if ( empty( $wgRemoveRedLinksExemptGroups ) ) {
@@ -58,7 +58,7 @@ class RemoveRedLinks {
 		return true;
 	}
 
-	function onLinkEnd( $dummy, Title $target, array $options, &$text, array &$attribs, &$ret ) {
+	public static function onLinkEnd( $dummy, Title $target, array $options, &$text, array &$attribs, &$ret ) {
 		global $wgRemoveRedLinksExemptGroups, $wgUser;
 
 		// return possibly if our group is exempt from this
