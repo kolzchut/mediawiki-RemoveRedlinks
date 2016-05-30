@@ -18,7 +18,7 @@ $wgExtensionCredits['other'][] = array(
 	'path'			=> __FILE__,
 	'name'			=> 'RemoveRedlinks',
 	'description'	=> 'Removes all redlinks from page output for certain groups',
-	'url'			=> 'https://mediawiki.org/wiki/Extension:RemoveRedlinks',
+	'url'			=> 'https://github.com/kolzchut/mediawiki-RemoveRedlinks',
 	'version'		=> '2.0.1',
 	'author'		=> array(
 		'[mailto:innocentkiller@gmail.com Chad Horohoe]',
