@@ -19,7 +19,7 @@ $wgExtensionCredits['other'][] = array(
 	'name'			=> 'RemoveRedlinks',
 	'description'	=> 'Removes all redlinks from page output for certain groups',
 	'url'			=> 'https://github.com/kolzchut/mediawiki-RemoveRedlinks',
-	'version'		=> '2.0.1',
+	'version'		=> '2.0.2',
 	'author'		=> array(
 		'[mailto:innocentkiller@gmail.com Chad Horohoe]',
 		'Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut])'
@@ -42,39 +42,45 @@ $wgHooks['PageRenderingHash'][] = 'RemoveRedLinks::onPageRenderingHash';
 
 class RemoveRedLinks {
 
-	public static function onPageRenderingHash( &$confstr, User $user, $optionsUsed ) {
+	protected static function isExempt( User $user ) {
 		global $wgRemoveRedLinksExemptGroups;
-
 		if ( empty( $wgRemoveRedLinksExemptGroups ) ) {
+			return false;
+		}
+
+		$userGroups = $user->getEffectiveGroups();
+		$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
+		if ( !empty( $match ) ) {
 			return true;
 		}
 
-		$userGroups = $user->getEffectiveGroups(true);
-		$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
-		if ( !empty( $match ) ) {
+		return false;
+	}
+
+	public static function onPageRenderingHash( &$confstr, User $user, $optionsUsed ) {
+		if ( self::isExempt( $user ) ) {
 			$confstr .= "!showRedLinks";
 		}
 
 		return true;
 	}
 
-	public static function onLinkEnd( $dummy, Title $target, array $options, &$text, array &$attribs, &$ret ) {
-		global $wgRemoveRedLinksExemptGroups, $wgUser;
-
-		// return possibly if our group is exempt from this
-		$userGroups = $wgUser->getEffectiveGroups(true);
-		$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
-		if ( !empty( $match ) ) {
+	public static function onLinkEnd(
+		$dummy, Title $target, array $options, &$text, array &$attribs, &$ret
+	) {
+		// return if link is known to be good or the user's group is exempt from this
+		$user = RequestContext::getMain()->getUser();
+		if ( in_array( 'known', $options, true ) || self::isExempt( $user ) ) {
 			return true;
 		}
 
-		if ( in_array( 'broken', $options ) ) {
+		if ( in_array( 'broken', $options, true ) ) {
 			$ret = $text;
 			return false;
-		} else {
-			// we know it's good
-			return true;
 		}
+
+		// If we got to here, it's all good
+		return true;
 	}
 
 }
