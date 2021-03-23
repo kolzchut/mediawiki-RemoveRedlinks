@@ -1,0 +1,35 @@
+{
+	"name": "RemoveRedlinks",
+	"author": [
+		"Chad Horohoe",
+		"Malte Ahrholdt",
+		"Dror S. [FFS] ([http://www.kolzchut.org.il Kol-Zchut]"
+	],
+	"version": "2.1.0",
+	"url": "https://www.mediawiki.org/wiki/Extension:RemoveRedlinks",
+	"descriptionmsg": "RemoveRedlinks-desc",
+	"license-name": "GPL-2.0-or-later",
+	"type": "parser",
+	"requires": {
+		"MediaWiki": ">= 1.35.0"
+	},
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\RemoveRedlinks\\": "includes/"
+	},
+	"config": {
+		"RemoveRedLinksExemptGroups": {
+			"value": [],
+			"description": "Array of groups that should still see red links"
+		}
+	},
+	"Hooks": {
+		"HtmlPageLinkRendererEnd": "MediaWiki\\Extension\\RemoveRedlinks\\Hooks::onHtmlPageLinkRendererEnd",
+		"PageRenderingHash": "MediaWiki\\Extension\\RemoveRedlinks\\Hooks::onPageRenderingHash"
+	},
+	"MessagesDirs": {
+		"RemoveRedlinks": [
+			"i18n"
+		]
+	},
+	"manifest_version": 2
+}

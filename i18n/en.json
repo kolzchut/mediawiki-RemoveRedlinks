@@ -4,5 +4,5 @@
 			"Dror S. [FFS]"
 		]
 	},
-	"ext-removeredlinks-desc": "Removes all redlinks from page output for certain groups"
+	"RemoveRedlinks-desc": "Removes all redlinks from page output for certain groups"
 }
