@@ -21,6 +21,7 @@ namespace MediaWiki\Extension\RemoveRedlinks;
 use HtmlArmor;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Linker\LinkTarget;
+use MediaWiki\MediaWikiServices;
 use RequestContext;
 use Title;
 use User;
@@ -33,7 +34,9 @@ class Hooks {
 			return false;
 		}
 
-		$userGroups = $user->getEffectiveGroups();
+		$userGroups = MediaWikiServices::getInstance()
+		                               ->getUserGroupManager()
+		                               ->getUserEffectiveGroups( $user );
 		$match = array_intersect( $userGroups, $wgRemoveRedLinksExemptGroups );
 		if ( !empty( $match ) ) {
 			return true;
@@ -46,8 +49,6 @@ class Hooks {
 		if ( self::isExempt( $user ) ) {
 			$confstr .= "!showRedLinks";
 		}
-
-		return true;
 	}
 
 	/**
@@ -60,22 +61,31 @@ class Hooks {
 	 * @param LinkTarget $target
 	 * @param $isKnown
 	 * @param &$text
-	 * @param &$attribs[]
+	 * @param &$attribs []
 	 * @param &$ret
+	 *
+	 * @return bool
 	 */
 	public static function onHtmlPageLinkRendererEnd(
 		LinkRenderer $linkRenderer, LinkTarget $target, $isKnown, &$text, &$attribs, &$ret
 	) {
-		$user = RequestContext::getMain()->getUser();
+		// If it's not a broken (red) link, exit.
+		if ( $isKnown ) {
+			return true;
+		}
 
+		// If the user is exempt from this, exit
+		$user = RequestContext::getMain()->getUser();
 		if ( $user->isSafeToLoad() ) {
-			if ( $isKnown || self::isExempt( $user ) || !$target instanceof Title ) {
+			if ( self::isExempt( $user ) || !$target instanceof Title ) {
 				return true;
 			}
 		}
 
-		// At this point, the link is broken and the user isn't exempt, so make it plain text
+		// The link is broken and the user isn't exempt, so make it plain text
+		// and prevent further processing
 		$ret = HtmlArmor::getHtml( $text );
+		return false;
 	}
 
 }
