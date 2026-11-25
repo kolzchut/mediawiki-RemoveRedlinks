@@ -22,13 +22,25 @@ use HtmlArmor;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Linker\LinkTarget;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Parser\Parser;
+use MediaWiki\User\UserIdentity;
 use RequestContext;
 use Title;
 use User;
+use WeakMap;
+use WeakReference;
 
 class Hooks {
 
-	protected static function isExempt( User $user ) {
+	/**
+	 * Each parser's own LinkRenderer, mapped to that parser, so a link can be judged by the
+	 * user of the parser options it is rendered for.
+	 *
+	 * @var WeakMap<LinkRenderer,WeakReference<Parser>>|null
+	 */
+	private static ?WeakMap $parsersByLinkRenderer = null;
+
+	protected static function isExempt( UserIdentity $user ) {
 		global $wgRemoveRedLinksExemptGroups;
 		if ( empty( $wgRemoveRedLinksExemptGroups ) ) {
 			return false;
@@ -43,6 +55,38 @@ class Hooks {
 		}
 
 		return false;
+	}
+
+	/**
+	 * ParserFirstCallInit hook handler, called once for each new parser.
+	 *
+	 * @param Parser $parser
+	 */
+	public static function onParserFirstCallInit( Parser $parser ) {
+		self::$parsersByLinkRenderer ??= new WeakMap();
+		self::$parsersByLinkRenderer[ $parser->getLinkRenderer() ] = WeakReference::create( $parser );
+	}
+
+	/**
+	 * The user a link is rendered for. For a link the parser renders, that is the user of
+	 * the parser options, which the parser cache key is built from (see onPageRenderingHash).
+	 * It is not the user making the web request: core renders other users' copies inside
+	 * a request, e.g. the anonymous copy when an editor saves a page. Links rendered
+	 * outside the parser go by the request user.
+	 *
+	 * @param LinkRenderer $linkRenderer
+	 * @return UserIdentity|null Null when the request user is not safe to load yet
+	 */
+	private static function getUserForLinks( LinkRenderer $linkRenderer ): ?UserIdentity {
+		$parserRef = self::$parsersByLinkRenderer[ $linkRenderer ] ?? null;
+		$parser = $parserRef ? $parserRef->get() : null;
+		$options = $parser ? $parser->getOptions() : null;
+		if ( $options ) {
+			return $options->getUserIdentity();
+		}
+
+		$user = RequestContext::getMain()->getUser();
+		return $user->isSafeToLoad() ? $user : null;
 	}
 
 	public static function onPageRenderingHash( &$confstr, User $user, $optionsUsed ) {
@@ -75,8 +119,8 @@ class Hooks {
 		}
 
 		// If the user is exempt from this, exit
-		$user = RequestContext::getMain()->getUser();
-		if ( $user->isSafeToLoad() ) {
+		$user = self::getUserForLinks( $linkRenderer );
+		if ( $user ) {
 			if ( self::isExempt( $user ) || !$target instanceof Title ) {
 				return true;
 			}
