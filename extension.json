@@ -24,7 +24,8 @@
 	},
 	"Hooks": {
 		"HtmlPageLinkRendererEnd": "MediaWiki\\Extension\\RemoveRedlinks\\Hooks::onHtmlPageLinkRendererEnd",
-		"PageRenderingHash": "MediaWiki\\Extension\\RemoveRedlinks\\Hooks::onPageRenderingHash"
+		"PageRenderingHash": "MediaWiki\\Extension\\RemoveRedlinks\\Hooks::onPageRenderingHash",
+		"ParserFirstCallInit": "MediaWiki\\Extension\\RemoveRedlinks\\Hooks::onParserFirstCallInit"
 	},
 	"MessagesDirs": {
 		"RemoveRedlinks": [
